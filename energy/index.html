@@ -78,8 +78,7 @@ function renderFromSource(book){
   const water=metric('น้ำรวมเฉลี่ยต่อเดือน'), waterPerson=metric('น้ำต่อคน-เดือน'), fuel=metric('น้ำมันรวมเฉลี่ยต่อเดือน'), dieselMetric=metric('น้ำมันดีเซลเฉลี่ยต่อเดือน'), gasMetric=metric('น้ำมันเบนซินเฉลี่ยต่อเดือน');
   const wasteTotal=metric('ขยะรวมทั้งปี'), waste=metric('ขยะเฉลี่ยต่อเดือน'), recycle=metric('ขยะรีไซเคิลได้เฉลี่ยต่อเดือน'), rdf=metric('RDF');
   const paperInput=sheet('กรอกกระดาษ 2569'), paperBaseSheet=sheet('ข้อมูล Dashboard กระดาษ');
-  const paperAmount=(rows,month)=>{const row=rows.find(values=>values.map(num).some(value=>value===month));if(!row)return null;const values=row.map(num),position=values.findIndex(value=>value===month);return values.slice(position+1).find(value=>value!==null)??null};
-  const paper69=Array.from({length:12},(_,i)=>paperAmount(paperInput,i+1));
+  const paper69=M.map(month=>{const row=paperInput.find(values=>String(values[0]??'').trim()===month);return row?num(row[1]):null});
   const paper68=Array.from({length:12},(_,i)=>{const r=paperBaseSheet.find(row=>num(row[0])===2568&&num(row[2])===i+1);return r?num(r[4]):null});
   const paperCurrent=sum(paper69),paperBase=sum(paper68),paperCurrentAvg=avg(paper69),paperBaseAvg=avg(paper68);
   const ghgRows=sheet('ข้อมูล GHG'),ghgValue=label=>{const r=ghgRows.find(row=>String(row[0]??'').trim()===label)||[];return [num(r[1])??0,num(r[2])??0,num(r[3])??null]};
