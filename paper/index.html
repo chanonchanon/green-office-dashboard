@@ -32,11 +32,11 @@
   <section id="ghg" class="view"><div class="cards" id="ghgCards"></div><ul class="notice"><li>ปี 2568 เป็นปีฐานสำหรับการเปรียบเทียบ</li><li>ข้อมูลการปล่อยก๊าซเรือนกระจกปี 2569 จากมหาวิทยาลัยกำลังอยู่ระหว่างดำเนินการ</li><li>Scope 3 ปี 2569 ยังไม่มีข้อมูล</li></ul><div class="metric-charts"><section class="panel"><h2>การปล่อยก๊าซเรือนกระจกแยกตาม Scope</h2><p class="sub">tCO₂e · แท่งซ้อนแสดงสัดส่วน Scope 1, Scope 2 และ Scope 3 ในแต่ละปี</p><svg class="chart" id="ghgChart" viewBox="0 0 680 255" preserveAspectRatio="xMidYMid meet"></svg></section></div></section>
   <section id="waste" class="view"><div class="cards" id="wasteCards"></div><div class="metric-charts"><section class="panel"><h2>ปริมาณขยะและการจัดการขยะ</h2><p class="sub">ตัน · เปรียบเทียบปี 2568 และ 2569</p><svg class="chart" id="wasteChart" viewBox="0 0 680 255" preserveAspectRatio="xMidYMid meet"></svg></section></div></section>
   <footer>แหล่งข้อมูล: ENG Green Office</footer>
-</main><div id="chartTip" class="chart-tip" role="status" aria-live="polite"></div><script>
+</main><div id="chartTip" class="chart-tip" role="status" aria-live="polite"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><script>
 const M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const data={energy68:[178016.58,202758.19,230171.72,203111.61,203427.56,219909,246198.87,234596.78,276200.19,251407.02,176414.68,176267.63],energy69:[175136.7,216771.47,230479.64,182830.54,199915.74,231786.9,267601.84,274355.4,null,null,null,null],per68:[47.38,53.97,61.26,62.67,62.77,46.15,51.67,49.23,57.96,52.69,33.53,33.5],per69:[33.28,41.2,43.8,39.21,42.87,39.56,45.68,46.83,null,null,null,null],solar:[39.27,33.55,38.35,36.74,35.65,29.92,21,21.45,null,null,null,null],water68:[3384,3128,2445,2695,4110,2822,3476,4129,2589,2586,2589,2589],water69:[2648,2878,3195,2218,2206,1934,2775,null,null,null,null,null],waterPer68:[.901,.833,.651,.832,1.268,.592,.729,.867,.543,.542,.492,.492],waterPer:[.503,.547,.607,.476,.473,.33,.474,null,null,null,null,null],diesel68:[238.56,466.39,328.52,278.27,407.24,535.91,241.95,251.16,338.18,280.7,393.6,232.1],diesel:[323.1,148.26,315.42,214.79,199.24,177.59,302.37,null,null,null,null,null],gas68:[9.12,7.71,7.87,7.87,7.86,5.34,9.19,7.97,11,6.5,6.44,9.66],gas:[9.92,5.64,15.83,6.67,7.52,8.79,9.44,null,null,null,null,null],paper68:[0,80,100,150,0,0,100,165,166,505,200,0],paper:[0,100,100,150,100,0,180,360,230,null,null,null]};
 const summary=[['ไฟฟ้ารวม','216,540','222,360','+2.7%'],['ไฟฟ้าต่อคน-เดือน','51.1','41.6','−18.6%'],['สัดส่วน Solar','32.2%','31.1%','−3.6%'],['น้ำรวมเฉลี่ย/เดือน','3,045','2,551','−16.2%'],['น้ำต่อคน-เดือน','0.728','0.426','−41.5%'],['กระดาษ A4 เฉลี่ย/เดือน','122.2','135.6','+11.0%'],['น้ำมันรวมเฉลี่ย/เดือน','340.8','249.2','−26.9%'],['ขยะรวมทั้งปี','671.32','523.32','−22.0%']];
-const fmt=n=>new Intl.NumberFormat('th-TH',{maximumFractionDigits:0}).format(n);const axisFmt=n=>new Intl.NumberFormat('th-TH',{minimumFractionDigits:n<1?2:n<10?1:0,maximumFractionDigits:n<1?2:n<10?1:0}).format(n);const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const legacyFmt=n=>new Intl.NumberFormat('th-TH',{maximumFractionDigits:0}).format(n);const axisFmt=n=>new Intl.NumberFormat('th-TH',{minimumFractionDigits:n<1?2:n<10?1:0,maximumFractionDigits:n<1?2:n<10?1:0}).format(n);const legacyAvg=a=>a.reduce((x,y)=>x+y,0)/a.length;
 function signageCards(id,items){document.querySelector('#'+id).innerHTML=items.map(x=>`<article class="signage-card"><div class="signage-label">${x[0]}</div><div class="signage-sub">${x[1]}</div><div class="signage-value"><strong>${x[2]}</strong><span>${x[3]}</span></div><span class="signage-delta ${x[5]==='up'||x[5]==='bad'?'up':''}">${x[4]}</span><div class="signage-base">Base Year 2568: <b>${x[6]}</b><br><span class="yearline">Current Year 2569: <b>${x[7]}</b></span></div></article>`).join('')}
 function cards(id, items){document.querySelector('#'+id).innerHTML=items.map(x=>{let delta=x[3]?(x[5]?x[3]:`${x[3]} ${x[3].startsWith('+')?'↑':'↓'}`):'',note=x[4]?`<div class="card-note">${x[4]}</div>`:'',deltaClass=x[6]||`${x[3]?.startsWith('+')?'warn':'good'}`;return `<article class="card"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="unit">${x[2]} <span class="delta ${deltaClass}">${delta}</span></div>${note}</article>`}).join('')}
 const tip=document.querySelector('#chartTip'),tooltipNumber=n=>new Intl.NumberFormat('th-TH',{maximumFractionDigits:2}).format(n);
@@ -57,6 +57,69 @@ compare('wasteChart',[['ขยะรวม',671.316,523.316],['เฉลี่�
 compare3('ghgChart',[['Scope 1',34.99,48.14,3.24],['Scope 2',859.82,874.86,610.99],['Scope 3',744.06,630.82,null]],'tCO₂e');
 bars('solarBars',M.map((m,i)=>[m,data.solar[i]]).filter(([,value])=>Number.isFinite(value)),'%');
 const summaryTable=document.querySelector('#summaryTable');if(summaryTable)summaryTable.innerHTML='<thead><tr><th>ตัวชี้วัด</th><th>2568</th><th>2569</th><th>เปลี่ยนแปลง</th></tr></thead><tbody>'+summary.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><span class="status ${r[3].startsWith('+')?'up':'down'}">${r[3]}</span></td></tr>`).join('')+'</tbody>';
+/* อ่านข้อมูลจากไฟล์ Google Drive ต้นทางทุกครั้งที่เปิดเว็บ โดยมีข้อมูลด้านบนเป็นค่าฉุกเฉินหากการเชื่อมต่อล้มเหลว */
+const GOOGLE_SOURCE='https://docs.google.com/spreadsheets/d/1zITewcSTZjAqwVwKf1AjaatDcWpe8-Cz/export?format=xlsx';
+const num=v=>{if(typeof v==='number')return Number.isFinite(v)?v:null;const n=Number(String(v??'').replace(/,/g,'').trim());return Number.isFinite(n)?n:null};
+const clean=v=>num(v)===null?null:num(v);
+const monthly=(values,zeroMissing=false)=>Array.from({length:12},(_,i)=>{const n=clean(values[i]);return zeroMissing&&n===0?null:n});
+const sum=values=>values.reduce((t,v)=>t+(Number.isFinite(v)?v:0),0);
+const count=values=>values.filter(Number.isFinite).length;
+const avg=values=>count(values)?sum(values)/count(values):0;
+const delta=(base,current)=>base?((current/base)-1)*100:0;
+const deltaText=(base,current)=>`${delta(base,current)>=0?'+':'−'}${Math.abs(delta(base,current)).toFixed(1)}% ${delta(base,current)>=0?'↑':'↓'}`;
+const fmt=(value,digits=0)=>new Intl.NumberFormat('th-TH',{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(value);
+const metricFlag=(base,current,increaseIsBad=true)=>increaseIsBad&&current>base?'up':'down';
+function sourceRow(rows,label){return rows.find(r=>String(r[0]??'').trim().startsWith(label))||[]}
+function renderFromSource(book){
+  const sheet=name=>XLSX.utils.sheet_to_json(book.Sheets[name],{header:1,defval:null,raw:true});
+  const dashboard=sheet('Dashboard Green Office');
+  const metric=label=>{const row=sourceRow(dashboard,label);return {base:num(row[1])??0,current:num(row[2])??0}};
+  const electricity=metric('ไฟฟ้ารวมเฉลี่ยต่อเดือน'), perPerson=metric('ไฟฟ้าต่อคน-เดือน'), perArea=metric('ไฟฟ้าต่อพื้นที่'), solar=metric('สัดส่วน Solar');
+  const water=metric('น้ำรวมเฉลี่ยต่อเดือน'), waterPerson=metric('น้ำต่อคน-เดือน'), fuel=metric('น้ำมันรวมเฉลี่ยต่อเดือน'), dieselMetric=metric('น้ำมันดีเซลเฉลี่ยต่อเดือน'), gasMetric=metric('น้ำมันเบนซินเฉลี่ยต่อเดือน');
+  const wasteTotal=metric('ขยะรวมทั้งปี'), waste=metric('ขยะเฉลี่ยต่อเดือน'), recycle=metric('ขยะรีไซเคิลได้เฉลี่ยต่อเดือน'), rdf=metric('RDF');
+  const paperInput=sheet('กรอกกระดาษ 2569'), paperBaseSheet=sheet('ข้อมูล Dashboard กระดาษ');
+  const paper69=Array.from({length:12},(_,i)=>{const r=paperInput.find(row=>num(row[0])===i+1);return r?num(r[1]):null});
+  const paper68=Array.from({length:12},(_,i)=>{const r=paperBaseSheet.find(row=>num(row[0])===2568&&num(row[2])===i+1);return r?num(r[4]):null});
+  const paperCurrent=sum(paper69),paperBase=sum(paper68),paperCurrentAvg=avg(paper69),paperBaseAvg=avg(paper68);
+  const ghgRows=sheet('ข้อมูล GHG'),ghgValue=label=>{const r=ghgRows.find(row=>String(row[0]??'').trim()===label)||[];return [num(r[1])??0,num(r[2])??0,num(r[3])??null]};
+  const scope1=ghgValue('SCOPE 1'),scope2=ghgValue('SCOPE 2'),scope3=ghgValue('SCOPE 3'),ghgTotal=ghgValue('SCOPE 1+2+3');
+  const recycleTotal=metric('ขยะรีไซเคิลได้'),recycleBaseRate=wasteTotal.base?recycleTotal.base/wasteTotal.base:0,recycleCurrentRate=wasteTotal.current?recycleTotal.current/wasteTotal.current:0;
+  signageCards('cards',[
+    ['ไฟฟ้ารวม','Per Month',fmt(electricity.current),'kWh',deltaText(electricity.base,electricity.current),metricFlag(electricity.base,electricity.current),'${fmt(electricity.base)} kWh','${fmt(electricity.current)} kWh'],
+    ['ไฟฟ้าต่อคน-เดือน','Per Person–Month',fmt(perPerson.current,2),'kWh/คน',deltaText(perPerson.base,perPerson.current),'down','${fmt(perPerson.base,2)} kWh','${fmt(perPerson.current,2)} kWh'],
+    ['ไฟฟ้าต่อพื้นที่','Per Area–Month',fmt(perArea.current,2),'kWh/m²',deltaText(perArea.base,perArea.current),metricFlag(perArea.base,perArea.current),'${fmt(perArea.base,2)} kWh/m²','${fmt(perArea.current,2)} kWh/m²'],
+    ['น้ำรวม','Per Month',fmt(water.current),'m³',deltaText(water.base,water.current),'down','${fmt(water.base)} m³','${fmt(water.current)} m³'],
+    ['น้ำต่อคน-เดือน','Per Person–Month',fmt(waterPerson.current,2),'m³/คน',deltaText(waterPerson.base,waterPerson.current),'down','${fmt(waterPerson.base,2)} m³','${fmt(waterPerson.current,2)} m³'],
+    ['น้ำมันรวมเฉลี่ยต่อเดือน','Per Month',fmt(fuel.current,1),'ลิตร',deltaText(fuel.base,fuel.current),'down','${fmt(fuel.base,1)} ลิตร','${fmt(fuel.current,1)} ลิตร'],
+    ['กระดาษ A4 สะสมปี 2569','รีม / ปี',fmt(paperCurrent),'รีม',deltaText(paperBase,paperCurrent),'down','${fmt(paperBase)} รีม / ปี','${fmt(paperCurrent)} รีม / ปี'],
+    ['การปล่อยก๊าซเรือนกระจก','รวมทุก Scope · Per Year',fmt(ghgTotal[2]??0,2),'tCO₂e',deltaText(ghgTotal[1],ghgTotal[2]??0),'down','${fmt(ghgTotal[1],2)} tCO₂e','${fmt(ghgTotal[2]??0,2)} tCO₂e'],
+    ['ขยะเฉลี่ยต่อเดือน','Per Month',fmt(waste.current,2),'ตัน',deltaText(waste.base,waste.current),'down','${fmt(waste.base,2)} ตัน','${fmt(waste.current,2)} ตัน'],
+    ['สัดส่วนขยะรีไซเคิล ปี 2569','% ของขยะทั้งหมด',fmt(recycleCurrentRate*100,1),'%',deltaText(recycleBaseRate,recycleCurrentRate),'bad','${fmt(recycleBaseRate*100,1)}%','${fmt(recycleCurrentRate*100,1)}%']
+  ]);
+  cards('energyCards',[['ไฟฟ้ารวม',fmt(electricity.current),'kWh / เดือน',deltaText(electricity.base,electricity.current),'',true,metricFlag(electricity.base,electricity.current)],['ไฟฟ้าต่อคน',fmt(perPerson.current,1),'kWh / คน-เดือน',deltaText(perPerson.base,perPerson.current),'',true,'good'],['ไฟฟ้าต่อพื้นที่',fmt(perArea.current,2),'kWh / m² / เดือน',deltaText(perArea.base,perArea.current),'',true,metricFlag(perArea.base,perArea.current)],['Solar เฉลี่ย',fmt(solar.current*100,1),'% ของการใช้ทั้งหมด',deltaText(solar.base,solar.current),'',true,metricFlag(solar.base,solar.current)]]);
+  cards('waterCards',[['น้ำรวม',fmt(water.current),'m³ / เดือน',deltaText(water.base,water.current),'',true,'good'],['น้ำต่อคน',fmt(waterPerson.current,3),'m³ / คน-เดือน',deltaText(waterPerson.base,waterPerson.current),'',true,'good']]);
+  cards('fuelCards',[['น้ำมันรวม',fmt(fuel.current,1),'ลิตร / เดือน',deltaText(fuel.base,fuel.current),'',true,'good'],['ดีเซล',fmt(dieselMetric.current,1),'ลิตร / เดือน',deltaText(dieselMetric.base,dieselMetric.current),'',true,'good'],['เบนซิน',fmt(gasMetric.current,1),'ลิตร / เดือน',deltaText(gasMetric.base,gasMetric.current),'',true,metricFlag(gasMetric.base,gasMetric.current)]]);
+  cards('paperCards',[['กระดาษ A4 สะสม',fmt(paperCurrent),'รีม / ปี',deltaText(paperBase,paperCurrent),'ปีฐาน 2568: '+fmt(paperBase)+' รีม',true,'good'],['กระดาษ A4 เฉลี่ย',fmt(paperCurrentAvg,2),'รีม / เดือน',deltaText(paperBaseAvg,paperCurrentAvg),'ปีฐาน 2568: '+fmt(paperBaseAvg,2)+' รีม / เดือน',true,'good']]);
+  cards('ghgCards',[['Scope 1',fmt(scope1[2]??0,2),'tCO₂e / ปี',deltaText(scope1[1],scope1[2]??0),'',true,'good'],['Scope 2',fmt(scope2[2]??0,2),'tCO₂e / ปี',deltaText(scope2[1],scope2[2]??0),'',true,'good'],['Scope 3',scope3[2]===null?'—':fmt(scope3[2],2),'tCO₂e / ปี',scope3[2]===null?'ยังไม่มีข้อมูลปี 2569':'','',true,'good'],['รวมทุก Scope',fmt(ghgTotal[2]??0,2),'tCO₂e / ปี',deltaText(ghgTotal[1],ghgTotal[2]??0),'',true,'good']]);
+  cards('wasteCards',[['ขยะรวมทั้งปี',fmt(wasteTotal.current,2),'ตัน',deltaText(wasteTotal.base,wasteTotal.current),'',true,'good'],['ขยะเฉลี่ยต่อเดือน',fmt(waste.current,2),'ตัน / เดือน',deltaText(waste.base,waste.current),'',true,'good'],['ขยะรีไซเคิลเฉลี่ย',fmt(recycle.current,2),'ตัน / เดือน',deltaText(recycle.base,recycle.current),'',true,'bad'],['สัดส่วนรีไซเคิล',fmt(recycleCurrentRate*100,1),'% ของขยะทั้งหมด',deltaText(recycleBaseRate,recycleCurrentRate),'',true,'bad']]);
+  const electricity68=monthly((sheet('การใช้ไฟฟ้า 68 (ปีฐาน)').find(r=>String(r[0]??'').includes('การใช้ไฟ้ารวมทั้งหมด'))||[]).slice(1,13));
+  const electricity69=monthly((sheet('กรอกการใช้ไฟฟ้า 69').find(r=>String(r[0]??'').includes('การใช้ไฟ้ารวมทั้งหมด'))||[]).slice(1,13),true);
+  const solar69Raw=monthly((sheet('กรอกการใช้ไฟฟ้า 69').find(r=>String(r[0]??'').includes('Solar PV'))||[]).slice(1,13),true);
+  const solarRatio=solar69Raw.map((v,i)=>Number.isFinite(v)&&Number.isFinite(electricity69[i])?v/electricity69[i]*100:null);
+  const waterSource=sheet('การใช้น้ำ'),waterBaseRow=waterSource.find(r=>num(r[0])===2568&&String(r[1]??'').trim()==='m3')||[],waterCurrentRow=waterSource.find(r=>num(r[0])===2569&&String(r[1]??'').trim()==='m3')||[];
+  const water68=monthly(waterBaseRow.slice(2,14)),water69=monthly(waterCurrentRow.slice(2,14));
+  const waterPerBaseRow=waterSource.find(r=>num(r[0])===2568&&String(r[1]??'').includes('m3/คน'))||[],waterPerCurrentRow=waterSource.find(r=>num(r[0])===2569&&String(r[1]??'').includes('m3/คน'))||[];
+  const waterPer68=monthly(waterPerBaseRow.slice(2,14)),waterPer69=monthly(waterPerCurrentRow.slice(2,14));
+  const area=91200; line('energyChart',[{data:electricity68},{data:electricity69}],['#7bd5ca','#8ee06d'],'kWh');line('electricUnitChart',[{data:electricity68.map(v=>v/area)},{data:electricity69.map(v=>Number.isFinite(v)?v/area:null)}],['#7bd5ca','#8ee06d'],'kWh/m²');
+  line('waterChart',[{data:water68},{data:water69}],['#7bd5ca','#8ee06d'],'m³');line('waterPersonChart',[{data:waterPer68},{data:waterPer69}],['#7bd5ca','#8ee06d'],'m³/คน');line('paperChart',[{data:paper68},{data:paper69}],['#7bd5ca','#8ee06d'],'รีม');bars('solarBars',M.map((m,i)=>[m,solarRatio[i]]).filter(([,v])=>Number.isFinite(v)),'%');
+  compare('wasteChart',[['ขยะรวม',wasteTotal.base,wasteTotal.current],['รีไซเคิล',recycleTotal.base,recycleTotal.current],['RDF',rdf.base,rdf.current]],'ตัน');compare3('ghgChart',[['Scope 1',scope1[0],scope1[1],scope1[2]],['Scope 2',scope2[0],scope2[1],scope2[2]],['Scope 3',scope3[0],scope3[1],scope3[2]]]);
+}
+async function refreshFromGoogleDrive(){
+  if(!window.XLSX)throw new Error('ไม่สามารถโหลดตัวอ่านไฟล์ข้อมูลได้');
+  const response=await fetch(`${GOOGLE_SOURCE}&cache=${Date.now()}`,{cache:'no-store'});if(!response.ok)throw new Error(`ไม่สามารถอ่านไฟล์ข้อมูล (${response.status})`);
+  renderFromSource(XLSX.read(await response.arrayBuffer(),{type:'array'}));
+}
+refreshFromGoogleDrive().catch(error=>console.warn('ใช้ข้อมูลสำรองชั่วคราว:',error));
 const pageDefinitions=[['overview','ภาพรวม','RESOURCE DASHBOARD','Green Office Resource Dashboard'],['energy','ไฟฟ้า','ไฟฟ้า','Green Office | ไฟฟ้า'],['water','น้ำ','การใช้น้ำ','Green Office | การใช้น้ำ'],['fuel','น้ำมัน','การใช้น้ำมัน','Green Office | การใช้น้ำมัน'],['paper','กระดาษ','การใช้กระดาษ','Green Office | การใช้กระดาษ'],['ghg','ก๊าซเรือนกระจก','ก๊าซเรือนกระจก','Green Office | ก๊าซเรือนกระจก'],['waste','ขยะ','ขยะ','Green Office | ขยะ']];
 const routeKeys=pageDefinitions.map(x=>x[0]),pathParts=location.pathname.split('/').filter(Boolean),lastPathPart=pathParts.at(-1),pageKey=routeKeys.includes(lastPathPart)?lastPathPart:'overview',page=pageDefinitions.find(x=>x[0]===pageKey),basePath=pageKey==='overview'?location.pathname.replace(/index\.html$/,''):location.pathname.replace(new RegExp(`${pageKey}/?$`),'');
 document.title=page[3];document.querySelector('#pageHeading').innerHTML=`GREEN OFFICE<span>${page[2]}</span>`;document.querySelector('#pageNav').innerHTML=pageDefinitions.map(x=>`<a class="tab" aria-selected="${x[0]===pageKey}" href="${basePath}${x[0]==='overview'?'':x[0]+'/'}">${x[1]}</a>`).join('');document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===pageKey));
