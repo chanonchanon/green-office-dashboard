@@ -86,7 +86,7 @@ function renderFromSource(book){
   const sheet=name=>XLSX.utils.sheet_to_json(book.Sheets[name],{header:1,defval:null,raw:true});
   const dashboard=sheet('Dashboard Green Office');
   const metric=label=>{const row=sourceRow(dashboard,label);return {base:num(row[1])??0,current:num(row[2])??0}};
-  const electricity=metric('ไฟฟ้ารวมเฉลี่ยต่อเดือน'), perPerson=metric('ไฟฟ้าต่อคน-เดือน'), perArea=metric('ไฟฟ้าต่อพื้นที่'), solar=metric('สัดส่วน Solar');
+  const electricity=metric('ไฟฟ้ารวมเฉลี่ยต่อเดือน'), perPerson=metric('ไฟฟ้าต่อคน-เดือน'), perArea=metric('ไฟฟ้าต่อพื้นที่'), solar=metric('สัดส่วนการใช้พลังงาน Solar');
   const water=metric('น้ำรวมเฉลี่ยต่อเดือน'), waterPerson=metric('น้ำต่อคน-เดือน'), fuel=metric('น้ำมันรวมเฉลี่ยต่อเดือน'), dieselMetric=metric('น้ำมันดีเซลเฉลี่ยต่อเดือน'), gasMetric=metric('น้ำมันเบนซินเฉลี่ยต่อเดือน');
   const wasteDashboard=sheet('Dashboard ขยะ');
   const wasteRows=year=>{const start=wasteDashboard.findIndex(row=>num(row[0])===year);return start<0?[]:wasteDashboard.slice(start+2,start+14)};
