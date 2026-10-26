@@ -130,7 +130,7 @@ function renderFromSource(book){
   const solarRatio=solar69Raw.map((v,i)=>Number.isFinite(v)&&Number.isFinite(electricity69[i])?v/electricity69[i]*100:null);
   const waterSource=sheet('การใช้น้ำ'),waterBaseRow=waterSource.find(r=>num(r[0])===2568&&String(r[1]??'').trim()==='m3')||[],waterCurrentRow=waterSource.find(r=>num(r[0])===2569&&String(r[1]??'').trim()==='m3')||[];
   const water68=monthly(waterBaseRow.slice(2,14)),water69=monthly(waterCurrentRow.slice(2,14));
-  const waterPerRow=year=>waterSource.find(r=>num(r[0])===year&&String(r[1]??'').replace(/\s/g,'').includes('คน'))||[],waterPerBaseRow=waterPerRow(2568),waterPerCurrentRow=waterPerRow(2569);
+  const waterPerRow=year=>{const start=waterSource.findIndex(r=>num(r[0])===year&&String(r[1]??'').trim()==='m3');return start<0?[]:waterSource.slice(start,start+4).find(r=>String(r[1]??'').includes('คน'))||[]},waterPerBaseRow=waterPerRow(2568),waterPerCurrentRow=waterPerRow(2569);
   const waterPer68=monthly(waterPerBaseRow.slice(2,14)),waterPer69=monthly(waterPerCurrentRow.slice(2,14));
   const area=91200; line('energyChart',[{data:electricity68},{data:electricity69}],['#7bd5ca','#8ee06d'],'kWh');line('electricUnitChart',[{data:electricity68.map(v=>v/area)},{data:electricity69.map(v=>Number.isFinite(v)?v/area:null)}],['#7bd5ca','#8ee06d'],'kWh/m²');
   const fuelBase=sheet('ข้อมูล Dashboard น้ำมัน'),fuelCurrent=sheet('ข้อมูลน้ำมัน 2569'),fuelSeries=(rows,year,type)=>M.map((month,i)=>{const row=year===2568?rows.find(values=>num(values[0])===year&&num(values[2])===i+1&&String(values[3]??'').trim()===type):rows.find(values=>String(values[0]??'').trim()===month&&String(values[1]??'').trim()===type);return row?num(year===2568?row[5]:row[2]):null});
