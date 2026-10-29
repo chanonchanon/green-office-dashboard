@@ -70,7 +70,19 @@ const GOOGLE_SHEET_ID='1zITewcSTZjAqwVwKf1AjaatDcWpe8-Cz',SOURCE_CACHE_KEY='gree
 const SOURCE_SHEETS=[['Dashboard Green Office','A1:D30'],['Dashboard ขยะ','A1:H100'],['กรอกกระดาษ 2569','A1:C20'],['ข้อมูล Dashboard กระดาษ','A1:E20'],['Dash Board GHG','A1:N20'],['การใช้ไฟฟ้า 68 (ปีฐาน)','A1:M20'],['กรอกการใช้ไฟฟ้า 69','A1:M20'],['การใช้น้ำ','A1:P20'],['ข้อมูล Dashboard น้ำมัน','A1:G50'],['ข้อมูลน้ำมัน 2569','A1:E50']];
 function parseGvizJson(text){const marker='google.visualization.Query.setResponse(',start=text.indexOf(marker),end=text.lastIndexOf(')');if(start<0||end<=start)throw new Error('รูปแบบข้อมูล Google Sheets ไม่ถูกต้อง');const table=JSON.parse(text.slice(start+marker.length,end)).table;return (table.rows||[]).map(row=>(row.c||[]).map(cell=>cell?.v??null))}
 function sourceBookFromRows(rowsBySheet){return {Sheets:Object.fromEntries(Object.entries(rowsBySheet).map(([name,rows])=>[name,XLSX.utils.aoa_to_sheet(rows)]))}}
-function renderSourceBook(book){renderFromSource(book);const groups=monthlyGoalGroupsFromSource(book);groups.energy.note='จำนวนผู้ใช้อาคารเพิ่มขึ้นจากปี 2568';groups.fuel.note='อัตราการใช้น้ำมันของคณะฯ ขึ้นอยู่กับภารกิจของคณะและมหาวิทยาลัย';groups.paper.note='อัตราการใช้กระดาษใช้ข้อมูลจากการสั่งซื้อของพัสดุ';renderMonthlySavingGoals(groups);renderPaperGoalRows(groups.paper);renderFuelEfficiency(fuelEfficiencyFromSource(book));renderGhgAverageCards(ghgAveragesFromSource(book))}
+function renderEnergyChartsFromMonthlyData(book,energy){
+  const sheet=name=>XLSX.utils.sheet_to_json(book.Sheets[name],{header:1,defval:null,raw:true});
+  const solarRow=sheet('กรอกการใช้ไฟฟ้า 69').find(row=>String(row[0]??'').includes('Solar PV'))||[];
+  const solar69=monthly(solarRow.slice(1,13),true);
+  const solarRatio=solar69.map((value,index)=>Number.isFinite(value)&&Number.isFinite(energy.current[index])?value/energy.current[index]*100:null);
+  const area=91200;
+  line('energyChart',[{data:energy.base},{data:energy.current}],['#7bd5ca','#8ee06d'],'kWh');
+  line('electricUnitChart',[{data:energy.base.map(value=>value/area)},{data:energy.current.map(value=>Number.isFinite(value)?value/area:null)}],['#7bd5ca','#8ee06d'],'kWh/m²');
+  line('totalEnergyChart',[{data:energy.base},{data:energy.current}],['#7bd5ca','#8ee06d'],'kWh');
+  monthlyBars('energyBarChart',energy.base,energy.current,'kWh');
+  bars('solarBars',M.map((month,index)=>[month,solarRatio[index]]).filter(([,value])=>Number.isFinite(value)),'%');
+}
+function renderSourceBook(book){const groups=monthlyGoalGroupsFromSource(book);renderFromSource(book);groups.energy.note='จำนวนผู้ใช้อาคารเพิ่มขึ้นจากปี 2568';groups.fuel.note='อัตราการใช้น้ำมันของคณะฯ ขึ้นอยู่กับภารกิจของคณะและมหาวิทยาลัย';groups.paper.note='อัตราการใช้กระดาษใช้ข้อมูลจากการสั่งซื้อของพัสดุ';renderMonthlySavingGoals(groups);renderPaperGoalRows(groups.paper);renderFuelEfficiency(fuelEfficiencyFromSource(book));renderGhgAverageCards(ghgAveragesFromSource(book));renderEnergyChartsFromMonthlyData(book,groups.energy)}
 function readCachedSource(){try{const cached=JSON.parse(localStorage.getItem(SOURCE_CACHE_KEY)||'null');return cached?.rowsBySheet||null}catch{return null}}
 function cacheSource(rowsBySheet){try{localStorage.setItem(SOURCE_CACHE_KEY,JSON.stringify({savedAt:Date.now(),rowsBySheet}))}catch{}}
 function fetchGvizJsonp(name,range){return new Promise((resolve,reject)=>{const callback=`greenOfficeGviz${Date.now()}${Math.random().toString(36).slice(2)}`,script=document.createElement('script'),cleanup=()=>{delete window[callback];script.remove()};const timeout=setTimeout(()=>{cleanup();reject(new Error(`หมดเวลารอข้อมูล ${name}`))},15000);window[callback]=response=>{clearTimeout(timeout);cleanup();resolve((response.table.rows||[]).map(row=>(row.c||[]).map(cell=>cell?.v??null)))};script.onerror=()=>{clearTimeout(timeout);cleanup();reject(new Error(`ไม่สามารถอ่านข้อมูล ${name}`))};const tqx=encodeURIComponent(`out:json;responseHandler:${callback}`);script.src=`https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=${tqx}&sheet=${encodeURIComponent(name)}&range=${range}&cache=${Date.now()}`;document.head.append(script)})}
