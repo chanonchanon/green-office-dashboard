@@ -73,8 +73,8 @@ monthlyBars('ghgTotalBarChart',[124.32,143.66,160.38,143.31,148.78,163.56,215.2,
 bars('solarBars',M.map((m,i)=>[m,data.solar[i]]).filter(([,value])=>Number.isFinite(value)),'%');
 const summaryTable=document.querySelector('#summaryTable');if(summaryTable)summaryTable.innerHTML='<thead><tr><th>ตัวชี้วัด</th><th>2568</th><th>2569</th><th>เปลี่ยนแปลง</th></tr></thead><tbody>'+summary.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td><span class="status ${r[3].startsWith('+')?'up':'down'}">${r[3]}</span></td></tr>`).join('')+'</tbody>';
 /* อ่านข้อมูลจากไฟล์ Google Drive ต้นทางทุกครั้งที่เปิดเว็บ โดยมีข้อมูลด้านบนเป็นค่าฉุกเฉินหากการเชื่อมต่อล้มเหลว */
-const GOOGLE_SHEET_ID='1zITewcSTZjAqwVwKf1AjaatDcWpe8-Cz',SOURCE_CACHE_KEY='green-office-source-gviz-v8';
-const SOURCE_SHEETS=[['Dashboard Green Office','A1:D30'],['Dashboard ขยะ','A1:H100'],['กรอกกระดาษ 2569','A1:C20'],['ข้อมูล Dashboard กระดาษ','A1:E20'],['Dash Board GHG','A1:N20'],['การใช้ไฟฟ้า 68 (ปีฐาน)','A1:M20'],['กรอกการใช้ไฟฟ้า 69','A1:M20'],['การใช้น้ำ','A1:P20'],['ข้อมูล Dashboard น้ำมัน','A1:G50'],['ข้อมูลน้ำมัน 2569','A1:E50']];
+const GOOGLE_SHEET_ID='1zITewcSTZjAqwVwKf1AjaatDcWpe8-Cz',SOURCE_CACHE_KEY='green-office-source-gviz-v9';
+const SOURCE_SHEETS=[['Dashboard Green Office','A1:D30'],['Dashboard ขยะV2','A1:P100'],['กรอกกระดาษ 2569','A1:C20'],['ข้อมูล Dashboard กระดาษ','A1:E20'],['Dash Board GHG','A1:N20'],['การใช้ไฟฟ้า 68 (ปีฐาน)','A1:M20'],['กรอกการใช้ไฟฟ้า 69','A1:M20'],['การใช้น้ำ','A1:P20'],['ข้อมูล Dashboard น้ำมัน','A1:G50'],['ข้อมูลน้ำมัน 2569','A1:E50']];
 function parseGvizJson(text){const marker='google.visualization.Query.setResponse(',start=text.indexOf(marker),end=text.lastIndexOf(')');if(start<0||end<=start)throw new Error('รูปแบบข้อมูล Google Sheets ไม่ถูกต้อง');const table=JSON.parse(text.slice(start+marker.length,end)).table;return (table.rows||[]).map(row=>(row.c||[]).map(cell=>cell?.v??null))}
 function sourceBookFromRows(rowsBySheet){return {Sheets:Object.fromEntries(Object.entries(rowsBySheet).map(([name,rows])=>[name,XLSX.utils.aoa_to_sheet(rows)]))}}
 function renderEnergyChartsFromMonthlyData(book,energy){
@@ -134,9 +134,17 @@ function renderFromSource(book){
   const energyBaseRows=sheet('การใช้ไฟฟ้า 68 (ปีฐาน)'),energyCurrentRows=sheet('กรอกการใช้ไฟฟ้า 69');
   const grid68=monthly((energyBaseRows.find(row=>String(row[0]??'').toLowerCase().includes('การไฟฟ้า'))||[]).slice(1,13)),grid69=monthly((energyCurrentRows.find(row=>String(row[0]??'').toLowerCase().includes('grid'))||[]).slice(1,13),true),gridMonths=count(grid69),gridBaseAverage=avg(grid68.slice(0,gridMonths)),gridCurrentAverage=avg(grid69);
   const water=metric('น้ำรวมเฉลี่ยต่อเดือน'), waterPerson=metric('น้ำต่อคน-เดือน'), fuel=metric('น้ำมันรวมเฉลี่ยต่อเดือน'), dieselMetric=metric('น้ำมันดีเซลเฉลี่ยต่อเดือน'), gasMetric=metric('น้ำมันเบนซินเฉลี่ยต่อเดือน');
-  const wasteDashboard=sheet('Dashboard ขยะ');
-  const wasteRows=year=>{const start=wasteDashboard.findIndex(row=>num(row[0])===year);return start<0?[]:wasteDashboard.slice(start+1,start+13)};
-  const wasteData=year=>{const rows=wasteRows(year),series=index=>rows.map(row=>{const value=num(row[index]);return value===null?null:value/1000});const total=series(5),recycle=series(6),rdf=series(7);return {total,recycle,rdf,totalYear:sum(total),totalMonth:avg(total),recycleMonth:avg(recycle),rdfMonth:avg(rdf)}};
+  /* Dashboard ขยะV2 stores the monthly values in kg: columns E–P, with each
+     year in its own section.  Convert to tonnes here so every card and chart
+     continues to use the displayed unit (ตัน). */
+  const wasteDashboard=sheet('Dashboard ขยะV2');
+  const wasteRows=year=>{const start=wasteDashboard.findIndex(row=>num(row[0])===year);return start<0?[]:wasteDashboard.slice(start+1,start+26)};
+  const wasteData=year=>{const rows=wasteRows(year),series=label=>monthly((rows.find(row=>String(row[2]??'').trim()===label)||[]).slice(4,16)).map(value=>Number.isFinite(value)?value/1000:null),total=series('จำนวนขยะรวม'),recycle=series('รวมขยะรีไซเคิล/นำกลับมาใช้ใหม่'),rdf=series('4.6 เชื้อเพลิง RDF');
+    /* The current-year source marks future months with a zero total.  Keep all
+       waste series empty after the last actual total, including RDF. */
+    const lastActual=total.reduce((last,value,index)=>Number.isFinite(value)&&value>0?index:last,-1),trimCurrent=values=>year===2569?values.map((value,index)=>index>lastActual?null:value):values,finalTotal=trimCurrent(total),finalRecycle=trimCurrent(recycle),finalRdf=trimCurrent(rdf);
+    return {total:finalTotal,recycle:finalRecycle,rdf:finalRdf,totalYear:sum(finalTotal),totalMonth:avg(finalTotal),recycleMonth:avg(finalRecycle),rdfMonth:avg(finalRdf)};
+  };
   const waste68=wasteData(2568),waste69=wasteData(2569);
   const paperInput=sheet('กรอกกระดาษ 2569'), paperBaseSheet=sheet('ข้อมูล Dashboard กระดาษ');
   const paper69=M.map(month=>{const row=paperInput.find(values=>String(values[0]??'').trim()===month);return row?num(row[1]):null});
